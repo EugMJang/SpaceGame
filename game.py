@@ -18,6 +18,9 @@ def main():
 
     enemies = pygame.sprite.Group()
     enemies.add(Enemy(main_player))
+
+    healthbars = pygame.sprite.Group()
+
     SPAWN_EVENT = pygame.USEREVENT + 1
     pygame.time.set_timer(SPAWN_EVENT, 1000)
     while running:
@@ -50,10 +53,13 @@ class MainPlayer(pygame.sprite.Sprite):
 
         self.rect = self.image.get_rect()
         self.rect.center = (width / 2, height / 2)
+
+        self.health_bar = HealthBar((self.rect.centerx, self.rect.bottom + 10), self.side, (175, 0, 0), (0, 175, 0))
     
     def update(self):
         self.point_to_cursor()
         print(self.health)
+        self.health_bar.draw(self.health, (self.rect.centerx, self.rect.bottom + 10))
         if self.health <= 0:
             sys.exit()
 
@@ -79,6 +85,8 @@ class Enemy(pygame.sprite.Sprite):
         self.size = 20
         self.speed = -3
 
+        self.health = 100.0
+
         self.player = player
 
         self.image = pygame.Surface((self.size, self.size), pygame.SRCALPHA, 32).convert_alpha()
@@ -90,8 +98,11 @@ class Enemy(pygame.sprite.Sprite):
             self.rect.center = (-10, random.randint(10, height - 10))
         else:
             self.rect.center = (width + 10, random.randint(10, height - 10))
+
+        self.health_bar = HealthBar((self.rect.centerx, self.rect.bottom + 10), self.size, (0, 0, 0), (175, 0, 0))
     
     def update(self):
+        self.health_bar.draw(self.health, (self.rect.centerx, self.rect.bottom + 10))
         if (not pygame.sprite.collide_mask(self, self.player)):
             self.move_to_player()
         else:
@@ -101,6 +112,24 @@ class Enemy(pygame.sprite.Sprite):
         rel_pos = rel_x, rel_y = self.rect.centerx - self.player.rect.centerx, self.rect.centery - self.player.rect.centery
         distance_to_player = int(dist([0, 0], rel_pos))
         self.rect = self.rect.move(self.speed * rel_x / distance_to_player, self.speed * rel_y / distance_to_player)
+
+class HealthBar():
+    def __init__(self, pos, width, color, health_color):
+        self.pos, self.width, self.color, self.health_color = pos, width, color, health_color
+
+        self.image = pygame.Surface((width, 5))
+        pygame.draw.rect(self.image, color, (0, 0, width, 5))
+        pygame.draw.rect(self.image, health_color, (0, 0, width, 5))
+
+        self.rect = self.image.get_rect()
+        self.rect.center = pos
+    def draw(self, health, pos):
+        pygame.draw.rect(self.image, self.color, (0, 0, self.width, 5))
+        pygame.draw.rect(self.image, self.health_color, (0, 0, self.width * health / 100.0, 5))
+        
+        self.rect = self.image.get_rect()
+        self.rect.center = pos
+        screen.blit(self.image, self.rect)
 
 def draw_stars(positions):
     for x, y in positions:
