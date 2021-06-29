@@ -23,16 +23,26 @@ def main():
 
     SPAWN_EVENT = pygame.USEREVENT + 1
     pygame.time.set_timer(SPAWN_EVENT, 500)
+
+    start_ticks = pygame.time.get_ticks()
     while running:
         game_clock.tick(60)
         screen.fill((0, 0, 0))
         draw_stars(star_positions)
         player.draw(screen)
         player.update()
+
         enemies.draw(screen)
         enemies.update()
+
         bullets.draw(screen)
         bullets.update()
+
+        time_since_start = (pygame.time.get_ticks() - start_ticks) / 1000
+        font = pygame.font.SysFont("Arial", 25)
+        time_text = font.render(str(time_since_start) + " seconds", 1, (255, 255, 255))
+        screen.blit(time_text, (30, 30))
+
         pygame.display.flip()
 
         collisions = pygame.sprite.groupcollide(bullets, enemies, True, False)
@@ -67,7 +77,6 @@ class MainPlayer(pygame.sprite.Sprite):
     
     def update(self):
         self.point_to_cursor()
-        print(self.health)
         self.health_bar.draw(self.health, (self.rect.centerx, self.rect.bottom + 10))
         if self.health <= 0:
             sys.exit()
